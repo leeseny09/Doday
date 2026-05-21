@@ -22,7 +22,7 @@ public class User {
     private String name;
 
     @Enumerated(EnumType.STRING)
-    private Provider provider;
+    private Provider provider; // 어떤 소셜 로그인으로 가입했는지
 
     @Enumerated(EnumType.STRING)
     private Role role;
