@@ -21,6 +21,9 @@ public class User {
     @Column(nullable = false)
     private String name;
 
+    @Column
+    private String password;
+
     @Enumerated(EnumType.STRING)
     private Provider provider; // 어떤 소셜 로그인으로 가입했는지
 
@@ -40,6 +43,6 @@ public class User {
         isActive = true;  // 가입하면 자동으로 활성 상태
     }
 
-    public enum Provider { GOOGLE }
+    public enum Provider { GOOGLE, LOCAL }
     public enum Role { ROLE_USER, ROLE_ADMIN }
 }
