@@ -86,4 +86,43 @@ public class AuthService {
         return new LoginResponse(accessToken,refreshToken);
     }
 
+    // 토큰 발급 흐름
+    // access 만료 -> refresh 토큰으로 새로운 access 발급
+    // api 요청은 항상 access로만 이루어짐, refresh는 access 토큰을 발급 받기 위한 인증 용도로 사용됨
+    // 만료된 access 토큰 새로 발급하는 메소드
+    public String refresh (String refreshToken){
+
+        // 토큰 검증
+        if (!jwtUtil.validateToken(refreshToken)){
+            throw new IllegalArgumentException("유효하지 않은 토큰입니다.");
+        }
+
+        // 토큰에서 userId, role 꺼내기
+        Long userId = jwtUtil.getUserId(refreshToken);
+        String role = jwtUtil.getRole(refreshToken);
+
+        // redis에 저장된 토큰과 일치하는지 확인
+        String savedToken = redisTemplate.opsForValue().get("refresh:"+ userId);
+        if (!refreshToken.equals(savedToken)){
+            throw new IllegalArgumentException("토큰이 일치하지 않습니다.");
+        }
+
+        // 새 access token 발급 후 반환
+        return jwtUtil.generateAccessToken(userId,role);
+    }
+
+    // 로그아웃 메소드
+    public void logout(Long userId){
+
+        // redis에서 refresh 토큰 삭제
+        redisTemplate.delete("refresh:"+ userId);
+    }
+
+    // 현재 로그인 한 유저 정보 조회 메소드
+    // ooo님! 에 사용됨
+    public User me(Long userId){
+        return userRepository.findById(userId)
+                .orElseThrow(()-> new IllegalArgumentException("존재하지 않는 유저입니다."));
+    }
+
 }
