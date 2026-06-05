@@ -70,4 +70,10 @@ public class Todo {
     public void uncomplete() {
         this.isCompleted = false;
     }
+
+    // todo 미루는 메소드
+    public void move() {
+        this.scheduledDate = this.scheduledDate.plusDays(1); // 하루 뒤로 이월
+        this.moveCount++;  // 이월 횟수 +1
+    }
 }

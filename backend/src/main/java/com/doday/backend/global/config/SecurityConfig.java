@@ -29,6 +29,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
                     .authorizeHttpRequests(auth -> auth
                             // 회원가입, 로그인은 누구나 접근 가능
                             .requestMatchers("/api/auth/**").permitAll()
+                            .requestMatchers("/api/admin/batch/**").permitAll() // 테스트용 임시
                             .requestMatchers("/api/admin/**").hasRole("ADMIN")
                             .requestMatchers("/api/**").authenticated()
                             .anyRequest().permitAll())
@@ -36,7 +37,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
                     .oauth2Login(oauth2 ->oauth2
                             .successHandler(oAuth2SuccessHandler))
                     // jwt 필터를 시큐리티 앞에 추가
-
                     .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
             return http.build();
         }
