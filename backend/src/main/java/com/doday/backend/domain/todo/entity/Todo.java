@@ -53,4 +53,21 @@ public class Todo {
         moveCount = 0; // 이월 횟수 0으로 초기화
         alarmSent = false; // 초기엔 알람 안보낸 상태로 지정
     }
+
+    // todo 업데이트 메소드
+    public void update(String title, String category, LocalDateTime deadlineTime) {
+        if (title != null) this.title = title;
+        if (category != null) this.category = category;
+        if (deadlineTime != null) this.deadlineTime = deadlineTime;
+    }
+
+    // todo 완료 처리 메소드
+    public void complete() {
+        this.isCompleted = true;
+    }
+
+    // todo 완료 취소 메소드
+    public void uncomplete() {
+        this.isCompleted = false;
+    }
 }
