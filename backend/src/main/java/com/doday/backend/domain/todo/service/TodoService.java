@@ -8,6 +8,7 @@ import com.doday.backend.domain.todo.repository.TodoRepository;
 import com.doday.backend.domain.user.entity.User;
 import com.doday.backend.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import org.springframework.security.access.AccessDeniedException;
@@ -21,6 +22,7 @@ public class TodoService {
 
     private final TodoRepository todoRepository;
     private final UserRepository userRepository;
+    private final RedisTemplate<String, String> redisTemplate;
 
     // 투두 생성 메소드
     public TodoResponse createTodo(Long userId, TodoCreateRequest request){
@@ -75,6 +77,7 @@ public class TodoService {
                 .toList(); // 디시 리스트로 모으기
     }
 
+    // 투두 업데이트 메소드
     public TodoResponse updateTodo(Long userId, Long todoId, TodoUpdateRequest request){
 
         //1. todoid로 todo 조회
@@ -102,6 +105,7 @@ public class TodoService {
                 .build();
     }
 
+    // 투두 삭제 메소드
     public void deleteTodo(Long userId, Long todoId){
 
         // 1. todoid로 todo조회
@@ -117,6 +121,7 @@ public class TodoService {
         todoRepository.delete(todo);
     }
 
+    // 투두 완료 처리 메소드
     public void completeTodo(Long userId, Long todoId){
 
         // 1. todoid로 todo조회
@@ -134,6 +139,7 @@ public class TodoService {
         todoRepository.save(todo);
     }
 
+    // 투두 완료 취소 처리 메소드
     public void uncompleteTodo(Long userId, Long todoId){
 
         // 1. todoid로 todo조회
@@ -149,5 +155,45 @@ public class TodoService {
         todo.uncomplete();
         // 4. 저장
         todoRepository.save(todo);
+    }
+
+    // 이메일 알림 -> 할일 완료 처리 메소드
+    public void completeByToken(Long todoId, String token){
+
+        //1. redis에서 토큰 확인
+        String savedToken = redisTemplate.opsForValue().get("mail:complete:"+todoId);
+
+        if (!token.equals(savedToken)){
+            throw new IllegalArgumentException("유효하지 않은 토큰입니다.");
+        }
+
+        //2. 할일 완료 처리
+        Todo todo = todoRepository.findById(todoId)
+                .orElseThrow(()->new NoSuchElementException("존재하지 않는 할일입니다."));
+        todo.complete();
+        todoRepository.save(todo);
+
+        //3. 사용한 토큰 삭제
+        redisTemplate.delete("mail:complete:"+todoId);
+    }
+
+    // 이메일 알림 -> 할일 미완료 이월 처리 메소드
+    public void moveByToken(Long todoId, String token){
+
+        //1. redis에서 토큰 확인
+        String savedToken = redisTemplate.opsForValue().get("mail:move:"+todoId);
+
+        if (!token.equals(savedToken)){
+            throw new IllegalArgumentException("유효하지 않은 토큰입니다.");
+        }
+
+        //2. 할일 완료 처리
+        Todo todo = todoRepository.findById(todoId)
+                .orElseThrow(()->new NoSuchElementException("존재하지 않는 할일입니다."));
+        todo.move();
+        todoRepository.save(todo);
+
+        //3. 사용한 토큰 삭제
+        redisTemplate.delete("mail:move:"+todoId);
     }
 }

@@ -30,6 +30,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
                             // 회원가입, 로그인은 누구나 접근 가능
                             .requestMatchers("/api/auth/**").permitAll()
                             .requestMatchers("/api/admin/batch/**").permitAll() // 테스트용 임시
+                            .requestMatchers("/api/todo/*/complete", "/api/todo/*/move").permitAll()
                             .requestMatchers("/api/admin/**").hasRole("ADMIN")
                             .requestMatchers("/api/**").authenticated()
                             .anyRequest().permitAll())

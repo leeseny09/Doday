@@ -76,4 +76,9 @@ public class Todo {
         this.scheduledDate = this.scheduledDate.plusDays(1); // 하루 뒤로 이월
         this.moveCount++;  // 이월 횟수 +1
     }
+
+    // todo 알림 보내는 메소드
+    public void markAlarmSent() {
+        this.alarmSent = true;
+    }
 }

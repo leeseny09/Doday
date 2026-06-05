@@ -76,4 +76,26 @@ public class TodoController {
         return ResponseEntity.ok().build();
     }
 
+    // 이메일 링크 클릭 → 할일 완료 처리
+    // 로그인 없이 접근 가능해야 하므로 SecurityConfig에 허용 추가 필요
+    // 위에 로그인 한 유저가 완료 처리 누르는 엔드포인트와는 메소드 방식이 달라서 괜찮
+    @GetMapping("/{todoId}/complete")
+    public ResponseEntity<String> completeByToken(
+            @PathVariable Long todoId,
+            @RequestParam String token) {
+        todoService.completeByToken(todoId, token);
+        return ResponseEntity.ok("할일이 완료 처리됐어요!");
+    }
+
+    // 이메일 링크 클릭 → 할일 이월 처리
+    @GetMapping("/{todoId}/move")
+    public ResponseEntity<String> moveByToken(
+            @PathVariable Long todoId,
+            @RequestParam String token) {
+        todoService.moveByToken(todoId, token);
+        return ResponseEntity.ok("할일이 내일로 이월됐어요!");
+    }
+
+
+
 }

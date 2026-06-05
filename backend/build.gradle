@@ -46,6 +46,10 @@ dependencies {
 	// Spring Batch
 	// 대량의 데이터를 일괄 처리하는 프레임워크
 	implementation 'org.springframework.boot:spring-boot-starter-batch'
+
+	// 이메일 발송
+	// java의 이메일 라이브러리인 javamail을 스프링부트에서 쉽게 쓸 수 있게 해줌
+	implementation 'org.springframework.boot:spring-boot-starter-mail'
 }
 
 tasks.named('test') {
