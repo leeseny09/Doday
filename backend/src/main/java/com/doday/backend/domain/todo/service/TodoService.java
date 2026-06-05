@@ -129,7 +129,7 @@ public class TodoService {
         }
 
         // 3. 완료 처리
-        todo.complete(); 
+        todo.complete();
         // 4. 저장
         todoRepository.save(todo);
     }
