@@ -4,6 +4,8 @@ import com.doday.backend.domain.todo.dto.TodoCreateRequest;
 import com.doday.backend.domain.todo.dto.TodoResponse;
 import com.doday.backend.domain.todo.dto.TodoUpdateRequest;
 import com.doday.backend.domain.todo.service.TodoService;
+import com.doday.backend.infra.ai.AiParsingService;
+import com.doday.backend.domain.todo.dto.TodoParseResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +21,7 @@ import java.util.List;
 public class TodoController {
 
     private final TodoService todoService;
+    private final AiParsingService aiParsingService;
 
     // 할일 생성
     // 클라이언트가 api 요청시, 필터가 요청 가로채서 토큰에서 유저 정보 추출 후
@@ -94,6 +97,12 @@ public class TodoController {
             @RequestParam String token) {
         todoService.moveByToken(todoId, token);
         return ResponseEntity.ok("할일이 내일로 이월됐어요!");
+    }
+
+    // 자연어 입력 → AI 파싱 → 제목, 마감시간 추출
+    @PostMapping("/parse")
+    public ResponseEntity<TodoParseResponse> parse(@RequestBody String input) {
+        return ResponseEntity.ok(aiParsingService.parse(input));
     }
 
 
