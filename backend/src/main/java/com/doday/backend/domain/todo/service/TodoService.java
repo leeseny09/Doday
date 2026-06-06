@@ -7,12 +7,15 @@ import com.doday.backend.domain.todo.entity.Todo;
 import com.doday.backend.domain.todo.repository.TodoRepository;
 import com.doday.backend.domain.user.entity.User;
 import com.doday.backend.domain.user.repository.UserRepository;
+import com.doday.backend.infra.ai.AiRescheduleResponse;
+import com.doday.backend.infra.ai.AiRescheduleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import org.springframework.security.access.AccessDeniedException;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -23,6 +26,7 @@ public class TodoService {
     private final TodoRepository todoRepository;
     private final UserRepository userRepository;
     private final RedisTemplate<String, String> redisTemplate;
+    private final AiRescheduleService aiRescheduleService;
 
     // 투두 생성 메소드
     public TodoResponse createTodo(Long userId, TodoCreateRequest request){
@@ -178,7 +182,7 @@ public class TodoService {
     }
 
     // 이메일 알림 -> 할일 미완료 이월 처리 메소드
-    public void moveByToken(Long todoId, String token){
+    public AiRescheduleResponse moveByToken(Long todoId, String token){
 
         //1. redis에서 토큰 확인
         String savedToken = redisTemplate.opsForValue().get("mail:move:"+todoId);
@@ -187,13 +191,23 @@ public class TodoService {
             throw new IllegalArgumentException("유효하지 않은 토큰입니다.");
         }
 
-        //2. 할일 완료 처리
+        //2. AI 재배치 추천 시간 받기
+        AiRescheduleResponse reschedule = aiRescheduleService.reschedule(todoId);
+
+        //3. 할일 완료 처리
         Todo todo = todoRepository.findById(todoId)
                 .orElseThrow(()->new NoSuchElementException("존재하지 않는 할일입니다."));
         todo.move();
+
+        // 4. AI 추천 시간으로 deadlineTime 업데이트
+        LocalTime recommendedTime = LocalTime.parse(reschedule.getRecommendedTime());
+        todo.update(null, null, todo.getScheduledDate().atTime(recommendedTime));
         todoRepository.save(todo);
 
-        //3. 사용한 토큰 삭제
+        //5. 사용한 토큰 삭제
         redisTemplate.delete("mail:move:"+todoId);
+
+        // 6. AI 재배치 결과 반환
+        return reschedule;
     }
 }

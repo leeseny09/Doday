@@ -6,6 +6,7 @@ import com.doday.backend.domain.todo.dto.TodoUpdateRequest;
 import com.doday.backend.domain.todo.service.TodoService;
 import com.doday.backend.infra.ai.AiParsingService;
 import com.doday.backend.domain.todo.dto.TodoParseResponse;
+import com.doday.backend.infra.ai.AiRescheduleResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -92,11 +93,10 @@ public class TodoController {
 
     // 이메일 링크 클릭 → 할일 이월 처리
     @GetMapping("/{todoId}/move")
-    public ResponseEntity<String> moveByToken(
+    public ResponseEntity<AiRescheduleResponse> moveByToken(
             @PathVariable Long todoId,
             @RequestParam String token) {
-        todoService.moveByToken(todoId, token);
-        return ResponseEntity.ok("할일이 내일로 이월됐어요!");
+        return ResponseEntity.ok(todoService.moveByToken(todoId, token));
     }
 
     // 자연어 입력 → AI 파싱 → 제목, 마감시간 추출
