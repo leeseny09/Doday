@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Doday — 서비스 제안서</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Pretendard:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --blue: #005AE0;
+    --sky: #0EA5E9;
+    --sky-light: #E0F2FE;
+    --sky-pale: #F0F9FF;
+    --white: #ffffff;
+    --ink: #0F172A;
+    --muted: #64748B;
+    --border: #E2E8F0;
+    --surface: #F8FAFC;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Pretendard', -apple-system, sans-serif;
+    background: #fff;
+    color: var(--ink);
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: rgba(255,255,255,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 0.5px solid var(--border);
+    padding: 0 40px;
+    height: 56px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav-logo { font-family: 'Instrument Serif', serif; font-size: 22px; color: var(--blue); letter-spacing: -0.5px; }
+  .nav-links { display: flex; gap: 28px; }
+  .nav-links a { font-size: 13px; color: var(--muted); text-decoration: none; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--blue); }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center;
+    padding: 120px 40px 80px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero-bg {
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 80% 60% at 50% 40%, #E0F2FE 0%, #fff 70%);
+    z-index: 0;
+  }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--sky-pale); border: 0.5px solid #BAE6FD;
+    color: var(--blue); font-size: 12px; font-weight: 500;
+    padding: 5px 14px; border-radius: 99px;
+    margin-bottom: 28px; position: relative; z-index: 1;
+    animation: fadeUp 0.6s ease both;
+  }
+  .hero-title {
+    font-family: 'Instrument Serif', serif;
+    font-size: clamp(52px, 9vw, 96px);
+    color: var(--ink);
+    letter-spacing: -2px;
+    line-height: 1.0;
+    position: relative; z-index: 1;
+    animation: fadeUp 0.6s 0.1s ease both;
+  }
+  .hero-title span { color: var(--blue); font-style: italic; }
+  .hero-sub {
+    font-size: clamp(15px, 2vw, 18px);
+    color: var(--muted);
+    max-width: 520px;
+    margin: 20px auto 0;
+    position: relative; z-index: 1;
+    font-weight: 300;
+    animation: fadeUp 0.6s 0.2s ease both;
+  }
+  .hero-cards {
+    display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;
+    margin-top: 48px; position: relative; z-index: 1;
+    animation: fadeUp 0.6s 0.3s ease both;
+  }
+  .hero-card {
+    background: #fff; border: 0.5px solid var(--border);
+    border-radius: 14px; padding: 16px 20px;
+    text-align: left; min-width: 160px;
+  }
+  .hero-card .hc-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 5px; }
+  .hero-card .hc-value { font-size: 22px; font-weight: 600; color: var(--blue); }
+  .hero-card .hc-desc { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .scroll-hint {
+    position: absolute; bottom: 32px; left: 50%; transform: translateX(-50%);
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    animation: bounce 2s infinite;
+  }
+  .scroll-hint span { font-size: 11px; color: var(--muted); }
+  .scroll-hint svg { color: var(--muted); }
+
+  /* SECTIONS */
+  section { padding: 100px 40px; max-width: 1000px; margin: 0 auto; }
+  .section-chip {
+    display: inline-block; font-size: 11px; font-weight: 600;
+    color: var(--blue); background: var(--sky-pale); border: 0.5px solid #BAE6FD;
+    padding: 4px 12px; border-radius: 99px; margin-bottom: 14px;
+    letter-spacing: 0.06em; text-transform: uppercase;
+  }
+  .section-title {
+    font-family: 'Instrument Serif', serif;
+    font-size: clamp(30px, 5vw, 44px);
+    line-height: 1.15; letter-spacing: -1px;
+    margin-bottom: 12px;
+  }
+  .section-title em { color: var(--blue); font-style: italic; }
+  .section-desc { font-size: 15px; color: var(--muted); max-width: 560px; font-weight: 300; line-height: 1.7; }
+
+  /* DIVIDER */
+  .divider { width: 100%; height: 0.5px; background: var(--border); max-width: 1000px; margin: 0 auto; }
+
+  /* PROBLEM */
+  .prob-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-top: 48px; }
+  .prob-card {
+    background: var(--surface); border: 0.5px solid var(--border);
+    border-radius: 14px; padding: 22px;
+  }
+  .prob-card .pc-num { font-size: 11px; font-weight: 600; color: var(--blue); margin-bottom: 10px; }
+  .prob-card .pc-title { font-size: 15px; font-weight: 500; color: var(--ink); margin-bottom: 6px; }
+  .prob-card .pc-desc { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+  /* FEATURES */
+  .feat-list { margin-top: 56px; display: flex; flex-direction: column; gap: 56px; }
+  .feat-block { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
+  .feat-block.reverse { direction: rtl; }
+  .feat-block.reverse > * { direction: ltr; }
+  .feat-num { font-size: 11px; font-weight: 600; color: var(--blue); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 10px; }
+  .feat-title { font-family: 'Instrument Serif', serif; font-size: 28px; letter-spacing: -0.5px; margin-bottom: 12px; line-height: 1.2; }
+  .feat-title em { color: var(--blue); font-style: italic; }
+  .feat-desc { font-size: 14px; color: var(--muted); line-height: 1.75; margin-bottom: 18px; font-weight: 300; }
+  .feat-points { display: flex; flex-direction: column; gap: 8px; }
+  .feat-point { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; color: var(--ink); }
+  .feat-point::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--blue); flex-shrink: 0; margin-top: 6px; }
+
+  /* MOCKUP */
+  .mockup-wrap {
+    background: var(--sky-pale); border: 0.5px solid #BAE6FD;
+    border-radius: 20px; padding: 28px; display: flex; justify-content: center;
+  }
+  .mock-phone {
+    width: 200px; background: #fff; border-radius: 20px;
+    border: 0.5px solid #E2E8F0; overflow: hidden;
+    box-shadow: 0 4px 24px rgba(0,90,224,0.08);
+  }
+  .mock-hdr { background: var(--blue); padding: 14px 16px 10px; }
+  .mock-hdr-day { font-size: 10px; color: rgba(255,255,255,0.7); margin-bottom: 2px; }
+  .mock-hdr-title { font-size: 14px; font-weight: 500; color: #fff; }
+  .mock-prog { padding: 10px 14px; border-bottom: 0.5px solid #F1F5F9; }
+  .mock-prog-row { display: flex; justify-content: space-between; font-size: 10px; margin-bottom: 5px; }
+  .mock-prog-row span:first-child { color: #94A3B8; }
+  .mock-prog-row span:last-child { font-weight: 500; color: var(--blue); }
+  .mock-bar { height: 4px; background: #F1F5F9; border-radius: 99px; overflow: hidden; }
+  .mock-bar-fill { height: 100%; width: 40%; background: var(--blue); border-radius: 99px; }
+  .mock-input-row { display: flex; align-items: center; gap: 8px; padding: 9px 14px; border-bottom: 0.5px solid #F8FAFC; }
+  .mock-circle-empty { width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid #CBD5E1; flex-shrink: 0; }
+  .mock-input-hint { font-size: 11px; color: #94A3B8; }
+  .mock-sec-label { font-size: 9px; font-weight: 600; color: #CBD5E1; letter-spacing: 0.08em; text-transform: uppercase; padding: 8px 14px 4px; }
+  .mock-item { padding: 0 14px; }
+  .mock-item-row { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 0.5px solid #F8FAFC; }
+  .mock-item-name { flex: 1; font-size: 11px; color: var(--ink); }
+  .mock-chip { font-size: 9px; padding: 2px 6px; border-radius: 99px; }
+  .chip-red { background: #FEF2F2; color: #DC2626; }
+  .chip-amber { background: #FFFBEB; color: #D97706; }
+  .chip-gray { background: #F8FAFC; color: #94A3B8; }
+  .mock-done-name { flex: 1; font-size: 11px; color: #CBD5E1; text-decoration: line-through; }
+  .mock-check { width: 16px; height: 16px; border-radius: 50%; background: var(--blue); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .mock-check svg { width: 8px; height: 8px; }
+
+  /* MODAL MOCKUP */
+  .mock-modal-bg { min-height: 220px; background: rgba(15,23,42,0.3); display: flex; align-items: flex-end; padding: 10px; }
+  .mock-modal { background: #fff; border-radius: 16px; padding: 16px; width: 100%; }
+  .mock-modal-icon { width: 36px; height: 36px; border-radius: 50%; background: var(--sky-pale); display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; }
+  .mock-modal-title { font-size: 12px; font-weight: 500; text-align: center; margin-bottom: 3px; }
+  .mock-modal-sub { font-size: 10px; color: #94A3B8; text-align: center; margin-bottom: 10px; }
+  .mock-modal-card { background: #F8FAFC; border-radius: 8px; padding: 8px 10px; margin-bottom: 10px; }
+  .mock-modal-name { font-size: 11px; font-weight: 500; }
+  .mock-modal-time { font-size: 10px; color: #94A3B8; margin-top: 2px; }
+  .mock-btn-done { width: 100%; padding: 9px; background: var(--blue); color: #fff; border: none; border-radius: 10px; font-size: 11px; font-weight: 500; margin-bottom: 6px; cursor: pointer; }
+  .mock-btn-skip { width: 100%; padding: 8px; background: #F8FAFC; color: #64748B; border: none; border-radius: 10px; font-size: 11px; cursor: pointer; }
+
+  /* TECH STACK */
+  .tech-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 48px; }
+  .tech-card {
+    background: #fff; border: 0.5px solid var(--border);
+    border-radius: 14px; padding: 20px;
+    transition: border-color 0.2s;
+  }
+  .tech-card:hover { border-color: #BFDBFE; }
+  .tech-tier { font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 10px; }
+  .tier-must { color: #DC2626; }
+  .tier-should { color: #D97706; }
+  .tier-could { color: var(--blue); }
+  .tech-name { font-size: 14px; font-weight: 500; color: var(--ink); margin-bottom: 5px; }
+  .tech-desc { font-size: 12px; color: var(--muted); line-height: 1.6; }
+  .tech-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 10px; }
+  .tech-tag { font-size: 10px; padding: 2px 8px; border-radius: 99px; background: var(--sky-pale); color: var(--blue); border: 0.5px solid #BAE6FD; }
+
+  /* ROADMAP */
+  .roadmap { margin-top: 48px; display: flex; flex-direction: column; gap: 0; }
+  .road-item { display: flex; gap: 24px; position: relative; padding-bottom: 32px; }
+  .road-item:last-child { padding-bottom: 0; }
+  .road-left { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
+  .road-dot { width: 32px; height: 32px; border-radius: 50%; background: var(--blue); color: #fff; font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .road-dot.gray { background: var(--surface); color: var(--muted); border: 0.5px solid var(--border); }
+  .road-line { width: 1px; flex: 1; background: var(--border); margin: 4px 0; min-height: 24px; }
+  .road-item:last-child .road-line { display: none; }
+  .road-content { flex: 1; padding-top: 4px; }
+  .road-week { font-size: 11px; font-weight: 600; color: var(--blue); margin-bottom: 4px; }
+  .road-week.gray { color: var(--muted); }
+  .road-title { font-size: 15px; font-weight: 500; color: var(--ink); margin-bottom: 6px; }
+  .road-items { display: flex; flex-wrap: wrap; gap: 5px; }
+  .road-chip { font-size: 11px; padding: 3px 10px; border-radius: 99px; background: var(--surface); border: 0.5px solid var(--border); color: var(--muted); }
+  .road-chip.blue { background: var(--sky-pale); border-color: #BAE6FD; color: var(--blue); }
+
+  /* DIFF TABLE */
+  .diff-table { width: 100%; border-collapse: collapse; margin-top: 40px; font-size: 13px; }
+  .diff-table th { padding: 12px 16px; text-align: left; font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 0.5px solid var(--border); }
+  .diff-table th.blue { color: var(--blue); }
+  .diff-table td { padding: 13px 16px; border-bottom: 0.5px solid #F8FAFC; color: var(--ink); vertical-align: top; }
+  .diff-table tr:last-child td { border-bottom: none; }
+  .diff-table td.feature { font-weight: 500; }
+  .diff-table .col-doday { background: var(--sky-pale); }
+  .check { color: var(--blue); font-weight: 600; }
+  .cross { color: #CBD5E1; }
+
+  /* KPI */
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-top: 40px; }
+  .kpi-card { background: var(--surface); border-radius: 14px; padding: 20px; border: 0.5px solid var(--border); }
+  .kpi-val { font-size: 28px; font-weight: 600; color: var(--blue); margin-bottom: 4px; }
+  .kpi-label { font-size: 12px; color: var(--muted); margin-bottom: 3px; }
+  .kpi-how { font-size: 11px; color: #CBD5E1; }
+
+  /* FOOTER */
+  footer {
+    background: var(--ink); color: #fff;
+    padding: 60px 40px; text-align: center;
+  }
+  .footer-logo { font-family: 'Instrument Serif', serif; font-size: 36px; color: #fff; margin-bottom: 8px; letter-spacing: -1px; }
+  .footer-logo span { color: var(--sky); font-style: italic; }
+  .footer-sub { font-size: 14px; color: rgba(255,255,255,0.5); margin-bottom: 32px; font-weight: 300; }
+  .footer-tags { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-bottom: 40px; }
+  .footer-tag { font-size: 12px; padding: 5px 14px; border-radius: 99px; background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.6); }
+  .footer-copy { font-size: 12px; color: rgba(255,255,255,0.3); }
+
+  /* ANIMATIONS */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes bounce {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(6px); }
+  }
+  .reveal {
+    opacity: 0; transform: translateY(24px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+
+  @media (max-width: 700px) {
+    nav { padding: 0 20px; }
+    .nav-links { display: none; }
+    section { padding: 70px 20px; }
+    .feat-block { grid-template-columns: 1fr; gap: 32px; }
+    .feat-block.reverse { direction: ltr; }
+    footer { padding: 48px 20px; }
+    .hero { padding: 100px 20px 60px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">Doday</div>
+  <div class="nav-links">
+    <a href="#problem">문제 정의</a>
+    <a href="#features">핵심 기능</a>
+    <a href="#tech">기술 스택</a>
+    <a href="#roadmap">로드맵</a>
+    <a href="#diff">차별점</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-badge">
+    <svg width="8" height="8" viewBox="0 0 8 8" fill="none"><circle cx="4" cy="4" r="4" fill="#005AE0"/></svg>
+    풀스택 1인 개발 · Spring Boot + React · 6주 MVP
+  </div>
+  <h1 class="hero-title">Do <em>Today,</em><br>Not Tomorrow</h1>
+  <p class="hero-sub">못 한 일을 자동으로 내일로 넘겨주는<br>마감 알림 기반 스마트 투두 앱</p>
+  <div class="hero-cards">
+    <div class="hero-card">
+      <div class="hc-label">핵심 기술</div>
+      <div class="hc-value" style="font-size:16px;font-weight:500">Batch</div>
+      <div class="hc-desc">자정 자동 이월 처리</div>
+    </div>
+    <div class="hero-card">
+      <div class="hc-label">완료 UX</div>
+      <div class="hc-value" style="font-size:16px;font-weight:500">알림 탭</div>
+      <div class="hc-desc">마감 시 2버튼 완료</div>
+    </div>
+    <div class="hero-card">
+      <div class="hc-label">플랫폼</div>
+      <div class="hc-value" style="font-size:16px;font-weight:500">PWA</div>
+      <div class="hc-desc">폰 + PC 동시 지원</div>
+    </div>
+    <div class="hero-card">
+      <div class="hc-label">AI 기능</div>
+      <div class="hc-value" style="font-size:16px;font-weight:500">리포트</div>
+      <div class="hc-desc">주간 미룸 패턴 분석</div>
+    </div>
+  </div>
+  <div class="scroll-hint">
+    <span>스크롤</span>
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 3v10M4 9l4 4 4-4"/></svg>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- PROBLEM -->
+<section id="problem">
+  <div class="reveal">
+    <div class="section-chip">01 · 문제 정의</div>
+    <h2 class="section-title">왜 투두 앱을<br><em>결국 안 쓰게 될까?</em></h2>
+    <p class="section-desc">Todoist, Notion, Things — 수많은 투두 앱이 있지만 대부분 결국 쓰지 않게 된다. 문제는 기록이 아니다. 기존 앱은 할 일 <strong>관리</strong>는 해줘도 할 일 <strong>실행</strong>을 도와주지 않는다.</p>
+  </div>
+  <div class="prob-grid reveal">
+    <div class="prob-card">
+      <div class="pc-num">문제 01</div>
+      <div class="pc-title">미루면 그냥 쌓인다</div>
+      <div class="pc-desc">오늘 못 한 일은 빨간 줄로 표시될 뿐. 자동으로 내일 일정에 반영되지 않아 계속 방치된다.</div>
+    </div>
+    <div class="prob-card">
+      <div class="pc-num">문제 02</div>
+      <div class="pc-title">완료 체크가 귀찮다</div>
+      <div class="pc-desc">할 일을 해도 앱을 열어서 완료 버튼을 누르는 걸 잊는다. 결국 미완료 항목이 쌓여 앱을 안 열게 된다.</div>
+    </div>
+    <div class="prob-card">
+      <div class="pc-num">문제 03</div>
+      <div class="pc-title">죄책감이 생긴다</div>
+      <div class="pc-desc">미룬 항목이 빨간색으로 쌓일수록 앱 열기가 두려워진다. 도구가 오히려 스트레스 요인이 된다.</div>
+    </div>
+    <div class="prob-card">
+      <div class="pc-num">문제 04</div>
+      <div class="pc-title">폰과 PC가 따로 논다</div>
+      <div class="pc-desc">데스크탑에서 작성한 할일이 폰에서 바로 보이지 않거나, 별도 앱 설치가 필요한 번거로움이 있다.</div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- SOLUTION -->
+<section>
+  <div class="reveal">
+    <div class="section-chip">02 · 솔루션</div>
+    <h2 class="section-title">Doday의<br><em>핵심 철학</em></h2>
+    <p class="section-desc">미루는 걸 처벌하지 않는다. 대신 앱이 알아서 따라온다. 못 한 일은 자정에 자동으로 내일로 넘어가고, 마감 시간엔 알림 하나로 완료 처리가 끝난다.</p>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:40px" class="reveal">
+    <div style="background:var(--surface);border:0.5px solid var(--border);border-radius:14px;padding:24px">
+      <div style="font-size:11px;font-weight:600;color:#DC2626;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.05em">기존 투두 앱</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="font-size:13px;color:var(--muted);display:flex;align-items:center;gap:8px"><span style="color:#CBD5E1">✕</span> 미루면 빨간 줄만 표시</div>
+        <div style="font-size:13px;color:var(--muted);display:flex;align-items:center;gap:8px"><span style="color:#CBD5E1">✕</span> 완료 버튼 직접 눌러야 함</div>
+        <div style="font-size:13px;color:var(--muted);display:flex;align-items:center;gap:8px"><span style="color:#CBD5E1">✕</span> 미룰수록 죄책감 증가</div>
+        <div style="font-size:13px;color:var(--muted);display:flex;align-items:center;gap:8px"><span style="color:#CBD5E1">✕</span> 앱 열기가 두려워짐</div>
+      </div>
+    </div>
+    <div style="background:var(--sky-pale);border:0.5px solid #BAE6FD;border-radius:14px;padding:24px">
+      <div style="font-size:11px;font-weight:600;color:var(--blue);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.05em">Doday</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="font-size:13px;color:var(--ink);display:flex;align-items:center;gap:8px"><span style="color:var(--blue)">✓</span> 자정에 자동으로 내일로 이월</div>
+        <div style="font-size:13px;color:var(--ink);display:flex;align-items:center;gap:8px"><span style="color:var(--blue)">✓</span> 마감 알림 탭 한 번으로 완료</div>
+        <div style="font-size:13px;color:var(--ink);display:flex;align-items:center;gap:8px"><span style="color:var(--blue)">✓</span> 이월해도 죄책감 없는 구조</div>
+        <div style="font-size:13px;color:var(--ink);display:flex;align-items:center;gap:8px"><span style="color:var(--blue)">✓</span> 앱이 알아서 따라와줌</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="reveal">
+    <div class="section-chip">03 · 핵심 기능</div>
+    <h2 class="section-title">4가지<br><em>핵심 기능</em></h2>
+  </div>
+
+  <div class="feat-list">
+
+    <!-- FEAT 1 -->
+    <div class="feat-block reveal">
+      <div>
+        <div class="feat-num">Feature 01</div>
+        <h3 class="feat-title">자정 자동<br><em>이월 Batch</em></h3>
+        <p class="feat-desc">매일 자정, Spring Batch가 미완료 할일을 스캔한다. 마감일 기준으로 정렬하고 자동으로 다음 날로 재배치. 사용자가 아무것도 하지 않아도 앱이 알아서 따라온다.</p>
+        <div class="feat-points">
+          <div class="feat-point">매일 자정 미완료 할일 자동 감지</div>
+          <div class="feat-point">마감일 기준 우선순위 정렬 후 이월</div>
+          <div class="feat-point">이월 횟수 추적 — 3번 이상 미룬 항목 별도 표시</div>
+          <div class="feat-point">Batch 실패 시 재시작 전략 (멱등성 보장)</div>
+        </div>
+      </div>
+      <div class="mockup-wrap">
+        <div class="mock-phone">
+          <div class="mock-hdr">
+            <div class="mock-hdr-day">수요일, 5월 7일</div>
+            <div class="mock-hdr-title">오늘 할 일</div>
+          </div>
+          <div class="mock-prog">
+            <div class="mock-prog-row"><span>진행률</span><span>2 / 5 완료</span></div>
+            <div class="mock-bar"><div class="mock-bar-fill"></div></div>
+          </div>
+          <div class="mock-input-row">
+            <div class="mock-circle-empty"></div>
+            <span class="mock-input-hint">할 일 입력 후 엔터...</span>
+          </div>
+          <div class="mock-sec-label">할 일</div>
+          <div class="mock-item">
+            <div class="mock-item-row">
+              <div class="mock-circle-empty"></div>
+              <span class="mock-item-name">포폴 README 작성</span>
+              <span class="mock-chip chip-red">오늘 마감</span>
+            </div>
+            <div class="mock-item-row">
+              <div class="mock-circle-empty"></div>
+              <span class="mock-item-name">Spring Security 공부</span>
+              <span class="mock-chip chip-amber">2번 이월</span>
+            </div>
+            <div class="mock-item-row">
+              <div class="mock-circle-empty"></div>
+              <span class="mock-item-name">알고리즘 문제 2개</span>
+              <span class="mock-chip chip-gray">마감 없음</span>
+            </div>
+          </div>
+          <div class="mock-sec-label">완료</div>
+          <div class="mock-item">
+            <div class="mock-item-row">
+              <div class="mock-check"><svg viewBox="0 0 10 10" fill="none" stroke="white" stroke-width="1.5"><path d="M2 5l2.5 2.5L8 3"/></svg></div>
+              <span class="mock-done-name">JPA 강의 듣기</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FEAT 2 -->
+    <div class="feat-block reverse reveal">
+      <div>
+        <div class="feat-num">Feature 02</div>
+        <h3 class="feat-title">마감 시간<br><em>알림 완료 UX</em></h3>
+        <p class="feat-desc">할일마다 개별 마감 시간을 설정하면, 그 시간에 푸시 알림이 온다. 알림에서 버튼 두 개만 보인다 — "완료했어요" 또는 "내일로 넘길게요". 앱을 열 필요가 없다.</p>
+        <div class="feat-points">
+          <div class="feat-point">할일별 개별 마감 시간 설정</div>
+          <div class="feat-point">PWA Web Push로 앱 설치 없이 알림</div>
+          <div class="feat-point">알림 모달에서 2버튼으로 즉시 처리</div>
+          <div class="feat-point">PC Chrome / Android / iOS 16.4+ 지원</div>
+        </div>
+      </div>
+      <div class="mockup-wrap">
+        <div class="mock-phone">
+          <div class="mock-modal-bg">
+            <div class="mock-modal">
+              <div class="mock-modal-icon">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#005AE0" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3.5l2 2"/></svg>
+              </div>
+              <div class="mock-modal-title">마감 시간이에요</div>
+              <div class="mock-modal-sub">이 할 일, 오늘 끝냈나요?</div>
+              <div class="mock-modal-card">
+                <div class="mock-modal-name">포폴 README 작성</div>
+                <div class="mock-modal-time">오후 9:00 마감</div>
+              </div>
+              <button class="mock-btn-done">완료했어요</button>
+              <button class="mock-btn-skip">내일로 넘길게요</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FEAT 3 -->
+    <div class="feat-block reveal">
+      <div>
+        <div class="feat-num">Feature 03</div>
+        <h3 class="feat-title">인라인 입력<br><em>+ 토글 UX</em></h3>
+        <p class="feat-desc">추가 버튼 없이 홈 화면에서 바로 입력. 빈 칸에 타이핑하고 엔터 치면 목록에 즉시 추가된다. 마감 시간이나 카테고리는 목록에서 해당 항목을 탭해서 토글로 펼쳐 설정한다.</p>
+        <div class="feat-points">
+          <div class="feat-point">홈 화면 인라인 입력 — 추가 버튼 없음</div>
+          <div class="feat-point">엔터 한 번으로 즉시 목록 추가</div>
+          <div class="feat-point">목록에서 탭 → 마감 시간 / 카테고리 토글 펼침</div>
+          <div class="feat-point">최소 조작으로 최대 정보 — 기본 뷰는 깔끔하게 유지</div>
+        </div>
+      </div>
+      <div class="mockup-wrap">
+        <div class="mock-phone">
+          <div style="padding:14px 14px 10px;border-bottom:0.5px solid #F1F5F9;">
+            <div style="font-size:10px;color:#94A3B8;margin-bottom:2px">수요일, 5월 7일</div>
+            <div style="font-size:14px;font-weight:500;color:#0F172A">오늘 할 일</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;padding:9px 14px;border-bottom:0.5px solid #F1F5F9;background:#EFF6FF;">
+            <div class="mock-circle-empty" style="border-color:#005AE0"></div>
+            <span style="font-size:11px;color:#005AE0;font-weight:500">알고리즘 문제 풀기_</span>
+          </div>
+          <div style="padding:0 14px;">
+            <div style="display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:0.5px solid #F8FAFC;">
+              <div class="mock-circle-empty"></div>
+              <span style="flex:1;font-size:11px;color:#0F172A">Spring Security 공부</span>
+              <span class="mock-chip chip-amber">2번 이월</span>
+            </div>
+            <div style="background:#FAFBFF;padding:8px 0 8px 8px;border-bottom:0.5px solid #F1F5F9;">
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+                <span style="font-size:10px;color:#94A3B8;width:36px;flex-shrink:0">마감</span>
+                <span style="font-size:10px;padding:3px 8px;border-radius:99px;background:#EFF6FF;border:0.5px solid #BFDBFE;color:#005AE0;font-weight:500">오후 11:00</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:5px;">
+                <span style="font-size:10px;color:#94A3B8;width:36px;flex-shrink:0">유형</span>
+                <span style="font-size:10px;padding:3px 8px;border-radius:99px;background:#EFF6FF;border:0.5px solid #BFDBFE;color:#005AE0;font-weight:500">공부</span>
+                <span style="font-size:10px;padding:3px 8px;border-radius:99px;background:#F8FAFC;border:0.5px solid #E2E8F0;color:#94A3B8">업무</span>
+                <span style="font-size:10px;padding:3px 8px;border-radius:99px;background:#F8FAFC;border:0.5px solid #E2E8F0;color:#94A3B8">개인</span>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;padding:9px 0;">
+              <div class="mock-circle-empty"></div>
+              <span style="flex:1;font-size:11px;color:#0F172A">알고리즘 문제 2개</span>
+              <span class="mock-chip chip-gray">없음</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FEAT 4 -->
+    <div class="feat-block reverse reveal">
+      <div>
+        <div class="feat-num">Feature 04</div>
+        <h3 class="feat-title">AI 주간<br><em>미룸 패턴 리포트</em></h3>
+        <p class="feat-desc">매주 월요일, Batch가 지난 주 미룸 데이터를 집계한다. 어떤 유형의 할일을 언제 자주 미루는지 LLM이 분석해서 맥락 있는 인사이트 리포트를 생성한다.</p>
+        <div class="feat-points">
+          <div class="feat-point">주간 Batch — 카테고리별 이월 횟수 집계</div>
+          <div class="feat-point">LLM API로 패턴 분석 코멘트 생성</div>
+          <div class="feat-point">"공부 관련 할일을 밤에 자주 미룸" 같은 맥락 있는 피드백</div>
+          <div class="feat-point">비동기 처리 — LLM 응답이 느려도 UX 영향 없음</div>
+        </div>
+      </div>
+      <div class="mockup-wrap">
+        <div class="mock-phone" style="padding:0;overflow:hidden">
+          <div style="background:var(--blue);padding:14px 16px 12px;">
+            <div style="font-size:10px;color:rgba(255,255,255,0.7);margin-bottom:2px">5월 1일 — 5월 7일</div>
+            <div style="font-size:14px;font-weight:500;color:#fff">주간 리포트</div>
+          </div>
+          <div style="padding:14px 14px 10px;">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">
+              <div style="background:#F8FAFC;border-radius:10px;padding:10px;text-align:center;">
+                <div style="font-size:20px;font-weight:600;color:var(--blue)">18</div>
+                <div style="font-size:10px;color:#94A3B8;margin-top:2px">완료한 할일</div>
+              </div>
+              <div style="background:#FEF2F2;border-radius:10px;padding:10px;text-align:center;">
+                <div style="font-size:20px;font-weight:600;color:#DC2626">5</div>
+                <div style="font-size:10px;color:#94A3B8;margin-top:2px">이월된 할일</div>
+              </div>
+            </div>
+            <div style="background:#EFF6FF;border-radius:10px;padding:12px;margin-bottom:10px;">
+              <div style="font-size:10px;font-weight:600;color:var(--blue);margin-bottom:6px">AI 인사이트</div>
+              <div style="font-size:11px;color:#0F172A;line-height:1.6">공부 관련 할일을 오후 10시 이후에 자주 미루고 있어요. 저녁 시간대 할일은 더 짧게 쪼개보는 건 어떨까요?</div>
+            </div>
+            <div style="font-size:10px;font-weight:600;color:#94A3B8;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em">카테고리별 완료율</div>
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:3px;"><span style="color:#0F172A">공부</span><span style="color:var(--blue);font-weight:500">72%</span></div>
+                <div style="height:4px;background:#F1F5F9;border-radius:99px;"><div style="height:100%;width:72%;background:var(--blue);border-radius:99px;"></div></div>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:3px;"><span style="color:#0F172A">업무</span><span style="color:var(--blue);font-weight:500">88%</span></div>
+                <div style="height:4px;background:#F1F5F9;border-radius:99px;"><div style="height:100%;width:88%;background:var(--blue);border-radius:99px;"></div></div>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:3px;"><span style="color:#0F172A">개인</span><span style="color:var(--blue);font-weight:500">45%</span></div>
+                <div style="height:4px;background:#F1F5F9;border-radius:99px;"><div style="height:100%;width:45%;background:var(--blue);border-radius:99px;"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- TECH STACK -->
+<section id="tech">
+  <div class="reveal">
+    <div class="section-chip">04 · 기술 스택</div>
+    <h2 class="section-title">면접에서<br><em>설명할 수 있는 코드</em></h2>
+    <p class="section-desc">모든 기술 선택에는 이유가 있다. "왜 이렇게 짰어요?" 질문에 답할 수 있도록 각 기술이 서비스에 자연스럽게 녹아있다.</p>
+  </div>
+  <div class="tech-grid reveal">
+
+    <div class="tech-card">
+      <div class="tech-tier tier-must">Must — 핵심</div>
+      <div class="tech-name">Spring Batch</div>
+      <div class="tech-desc">매일 자정 미완료 이월 + 매주 월요일 주간 리포트 집계. Chunk 기반 처리, Job/Step 설계, 실패 재시작 전략까지 Batch의 정석 활용.</div>
+      <div class="tech-tags"><span class="tech-tag">Chunk Processing</span><span class="tech-tag">Job/Step</span><span class="tech-tag">멱등성</span></div>
+    </div>
+
+    <div class="tech-card">
+      <div class="tech-tier tier-must">Must — 핵심</div>
+      <div class="tech-name">Spring Security + JWT</div>
+      <div class="tech-desc">구글 OAuth2 소셜 로그인, Access/Refresh Token 분리, Redis에 Refresh Token 저장. Security Filter Chain 구조 완전 이해 필요.</div>
+      <div class="tech-tags"><span class="tech-tag">OAuth2</span><span class="tech-tag">JWT</span><span class="tech-tag">Filter Chain</span></div>
+    </div>
+
+    <div class="tech-card">
+      <div class="tech-tier tier-must">Must — 핵심</div>
+      <div class="tech-name">JPA + QueryDSL</div>
+      <div class="tech-desc">Todo-User 연관관계 설계, 이월 이력 테이블, N+1 방지(fetch join), 집계 쿼리. DTO↔Entity 분리, 지연로딩 설계까지.</div>
+      <div class="tech-tags"><span class="tech-tag">연관관계</span><span class="tech-tag">N+1 방지</span><span class="tech-tag">QueryDSL</span></div>
+    </div>
+
+    <div class="tech-card">
+      <div class="tech-tier tier-must">Must — 핵심</div>
+      <div class="tech-name">Redis</div>
+      <div class="tech-desc">① Refresh Token 저장 (TTL 관리) ② 오늘의 할일 캐싱 (@Cacheable / @CacheEvict). 두 가지 활용처로 "왜 Redis 썼어요?" 설명 가능.</div>
+      <div class="tech-tags"><span class="tech-tag">Token 저장</span><span class="tech-tag">캐싱</span><span class="tech-tag">TTL</span></div>
+    </div>
+
+    <div class="tech-card">
+      <div class="tech-tier tier-should">Should — 차별화</div>
+      <div class="tech-name">Web Push + VAPID</div>
+      <div class="tech-desc">PWA 기반 마감 알림. 앱 설치 없이 브라우저 푸시. VAPID 키 관리, 구독 정보 저장, 알림 스케줄링. @Async 비동기 발송.</div>
+      <div class="tech-tags"><span class="tech-tag">VAPID</span><span class="tech-tag">PWA</span><span class="tech-tag">@Async</span></div>
+    </div>
+
+    <div class="tech-card">
+      <div class="tech-tier tier-should">Should — 차별화</div>
+      <div class="tech-name">LLM API 연동</div>
+      <div class="tech-desc">주간 미룸 데이터 → 프롬프트 설계 → 코멘트 생성. 비동기 처리로 LLM 응답이 느려도 UX 영향 없음. 외부 API 클라이언트 구현.</div>
+      <div class="tech-tags"><span class="tech-tag">프롬프트 설계</span><span class="tech-tag">비동기</span><span class="tech-tag">응답 파싱</span></div>
+    </div>
+
+    <div class="tech-card">
+      <div class="tech-tier tier-could">Could — 완성도</div>
+      <div class="tech-name">테스트 코드</div>
+      <div class="tech-desc">Batch Job 단위 테스트(@SpringBatchTest), Service 레이어 Mockito 테스트, MockMvc API 테스트. 포폴에서 보기 드문 차별화 포인트.</div>
+      <div class="tech-tags"><span class="tech-tag">JUnit5</span><span class="tech-tag">Mockito</span><span class="tech-tag">@SpringBatchTest</span></div>
+    </div>
+
+    <div class="tech-card">
+      <div class="tech-tier tier-could">Could — 완성도</div>
+      <div class="tech-name">GitHub Actions CI/CD</div>
+      <div class="tech-desc">PR 머지 → 자동 빌드 → EC2 배포 파이프라인. Dockerfile, GitHub Secrets 환경변수 관리, RDS + ElastiCache 구성.</div>
+      <div class="tech-tags"><span class="tech-tag">Docker</span><span class="tech-tag">EC2</span><span class="tech-tag">RDS</span></div>
+    </div>
+
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ROADMAP -->
+<section id="roadmap">
+  <div class="reveal">
+    <div class="section-chip">05 · 개발 로드맵</div>
+    <h2 class="section-title">6주<br><em>개발 계획</em></h2>
+    <p class="section-desc">Must Have 4개 완성이 최우선. Should → Could 순서로 확장. 기능 추가보다 코드 완성도를 높이는 게 우선이다.</p>
+  </div>
+  <div class="roadmap reveal">
+    <div class="road-item">
+      <div class="road-left"><div class="road-dot">1</div><div class="road-line"></div></div>
+      <div class="road-content">
+        <div class="road-week">1주차</div>
+        <div class="road-title">기반 구축 — 인증 + ERD</div>
+        <div class="road-items">
+          <span class="road-chip blue">Spring Boot 세팅</span>
+          <span class="road-chip blue">ERD + DB 설계</span>
+          <span class="road-chip blue">소셜 로그인 (Google OAuth2)</span>
+          <span class="road-chip blue">JWT + Redis 연동</span>
+          <span class="road-chip blue">Flyway 마이그레이션</span>
+        </div>
+      </div>
+    </div>
+    <div class="road-item">
+      <div class="road-left"><div class="road-dot">2</div><div class="road-line"></div></div>
+      <div class="road-content">
+        <div class="road-week">2주차</div>
+        <div class="road-title">할일 CRUD + 홈 화면</div>
+        <div class="road-items">
+          <span class="road-chip blue">할일 CRUD API</span>
+          <span class="road-chip blue">마감 시간 / 카테고리</span>
+          <span class="road-chip blue">Redis 캐싱</span>
+          <span class="road-chip blue">React 홈 화면 UI</span>
+          <span class="road-chip blue">인라인 입력 + 토글 UX</span>
+        </div>
+      </div>
+    </div>
+    <div class="road-item">
+      <div class="road-left"><div class="road-dot">3</div><div class="road-line"></div></div>
+      <div class="road-content">
+        <div class="road-week">3주차</div>
+        <div class="road-title">자정 이월 Batch + 알림</div>
+        <div class="road-items">
+          <span class="road-chip blue">Spring Batch 자정 이월 Job</span>
+          <span class="road-chip blue">이월 이력 테이블</span>
+          <span class="road-chip blue">Web Push + VAPID</span>
+          <span class="road-chip blue">마감 알림 모달 UI</span>
+        </div>
+      </div>
+    </div>
+    <div class="road-item">
+      <div class="road-left"><div class="road-dot">4</div><div class="road-line"></div></div>
+      <div class="road-content">
+        <div class="road-week">4주차</div>
+        <div class="road-title">AI 주간 리포트</div>
+        <div class="road-items">
+          <span class="road-chip blue">주간 집계 Batch Job</span>
+          <span class="road-chip blue">LLM API 연동</span>
+          <span class="road-chip blue">비동기 리포트 생성</span>
+          <span class="road-chip blue">리포트 화면 UI</span>
+        </div>
+      </div>
+    </div>
+    <div class="road-item">
+      <div class="road-left"><div class="road-dot gray">5</div><div class="road-line"></div></div>
+      <div class="road-content">
+        <div class="road-week gray">5주차</div>
+        <div class="road-title">완성도 + 테스트</div>
+        <div class="road-items">
+          <span class="road-chip">PWA manifest.json</span>
+          <span class="road-chip">테스트 코드 (JUnit5 / Mockito)</span>
+          <span class="road-chip">빈 상태 Empty State UI</span>
+          <span class="road-chip">반응형 CSS 정리</span>
+        </div>
+      </div>
+    </div>
+    <div class="road-item">
+      <div class="road-left"><div class="road-dot gray">6</div><div class="road-line"></div></div>
+      <div class="road-content">
+        <div class="road-week gray">6주차</div>
+        <div class="road-title">배포 + 문서화</div>
+        <div class="road-items">
+          <span class="road-chip">EC2 + RDS + ElastiCache</span>
+          <span class="road-chip">GitHub Actions CI/CD</span>
+          <span class="road-chip">Nginx 리버스 프록시</span>
+          <span class="road-chip">README + 포폴 문서화</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- DIFF -->
+<section id="diff">
+  <div class="reveal">
+    <div class="section-chip">06 · 차별점</div>
+    <h2 class="section-title">기존 서비스와<br><em>무엇이 다른가</em></h2>
+  </div>
+  <div class="reveal" style="overflow-x:auto;margin-top:40px;">
+    <table class="diff-table">
+      <thead>
+        <tr>
+          <th>기능</th>
+          <th>Todoist</th>
+          <th>Notion</th>
+          <th>Things 3</th>
+          <th class="blue">Doday</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="feature">미완료 자동 이월</td>
+          <td><span class="cross">수동 설정</span></td>
+          <td><span class="cross">없음</span></td>
+          <td><span class="cross">없음</span></td>
+          <td class="col-doday"><span class="check">자정 자동 이월 ✓</span></td>
+        </tr>
+        <tr>
+          <td class="feature">마감 알림 완료 처리</td>
+          <td><span class="cross">앱 열어야 함</span></td>
+          <td><span class="cross">없음</span></td>
+          <td><span class="cross">앱 열어야 함</span></td>
+          <td class="col-doday"><span class="check">알림에서 2버튼 ✓</span></td>
+        </tr>
+        <tr>
+          <td class="feature">이월 횟수 추적</td>
+          <td><span class="cross">없음</span></td>
+          <td><span class="cross">없음</span></td>
+          <td><span class="cross">없음</span></td>
+          <td class="col-doday"><span class="check">N번 이월 표시 ✓</span></td>
+        </tr>
+        <tr>
+          <td class="feature">AI 미룸 패턴 분석</td>
+          <td><span class="cross">없음</span></td>
+          <td><span class="cross">없음</span></td>
+          <td><span class="cross">없음</span></td>
+          <td class="col-doday"><span class="check">주간 LLM 리포트 ✓</span></td>
+        </tr>
+        <tr>
+          <td class="feature">PWA (앱 설치 불필요)</td>
+          <td><span class="cross">앱 설치 필요</span></td>
+          <td><span class="cross">앱 설치 필요</span></td>
+          <td><span class="cross">앱 설치 필요</span></td>
+          <td class="col-doday"><span class="check">브라우저로 동작 ✓</span></td>
+        </tr>
+        <tr>
+          <td class="feature">인라인 입력</td>
+          <td>지원</td>
+          <td>지원</td>
+          <td>지원</td>
+          <td class="col-doday"><span class="check">지원 + 토글 설정 ✓</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- KPI -->
+<section>
+  <div class="reveal">
+    <div class="section-chip">07 · 성공 지표</div>
+    <h2 class="section-title">MVP 기준<br><em>목표 KPI</em></h2>
+  </div>
+  <div class="kpi-grid reveal">
+    <div class="kpi-card">
+      <div class="kpi-val">3초</div>
+      <div class="kpi-label">할일 추가 완료 시간</div>
+      <div class="kpi-how">입력창 클릭 → 엔터 완료 기준</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-val">30%</div>
+      <div class="kpi-label">Day 7 리텐션</div>
+      <div class="kpi-how">가입 후 7일 내 재방문 비율</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-val">2탭</div>
+      <div class="kpi-label">알림 완료 처리</div>
+      <div class="kpi-how">알림 수신 → 완료/이월 처리</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-val">500ms</div>
+      <div class="kpi-label">API 응답 시간</div>
+      <div class="kpi-how">Batch 집계 API 기준 목표</div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">Do<span>day</span></div>
+  <p class="footer-sub">Do Today, Not Tomorrow</p>
+  <div class="footer-tags">
+    <span class="footer-tag">Spring Boot</span>
+    <span class="footer-tag">Spring Batch</span>
+    <span class="footer-tag">Spring Security</span>
+    <span class="footer-tag">JPA + QueryDSL</span>
+    <span class="footer-tag">Redis</span>
+    <span class="footer-tag">React</span>
+    <span class="footer-tag">PWA</span>
+    <span class="footer-tag">LLM API</span>
+    <span class="footer-tag">AWS EC2 + RDS</span>
+    <span class="footer-tag">GitHub Actions</span>
+  </div>
+  <p class="footer-copy">Doday — 풀스택 1인 개발 · 6주 MVP · 2025</p>
+</footer>
+
+<script>
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.classList.add('visible');
+    }
+  });
+}, { threshold: 0.1 });
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
