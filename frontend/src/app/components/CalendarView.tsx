@@ -1,34 +1,25 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router';
-import { ChevronLeft, ChevronRight, Circle, CheckCircle2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Circle, CheckCircle2, X } from 'lucide-react';
+import api from '../../api/axios';
 
 interface CalTask {
+  id: number;
   date: string;
   text: string;
   completed: boolean;
-  category: '공부' | '업무' | '개인';
+  category: string;
 }
 
-const MOCK_TASKS: CalTask[] = [
-  { date: '2026-05-13', text: '포폴 README 작성', completed: false, category: '업무' },
-  { date: '2026-05-13', text: 'Spring Security 공부', completed: false, category: '공부' },
-  { date: '2026-05-13', text: '알고리즘 문제 2개', completed: false, category: '공부' },
-  { date: '2026-05-12', text: 'JPA 강의 듣기', completed: true, category: '공부' },
-  { date: '2026-05-12', text: 'API 문서 작성', completed: true, category: '업무' },
-  { date: '2026-05-11', text: '운동 30분', completed: false, category: '개인' },
-  { date: '2026-05-10', text: '알고리즘 문제 3개', completed: true, category: '공부' },
-  { date: '2026-05-10', text: '독서 1시간', completed: true, category: '개인' },
-  { date: '2026-05-09', text: '주간 계획 세우기', completed: true, category: '개인' },
-  { date: '2026-05-08', text: '팀 미팅 준비', completed: true, category: '업무' },
-  { date: '2026-05-07', text: 'React 복습', completed: true, category: '공부' },
-  { date: '2026-05-06', text: '프로젝트 기획서', completed: true, category: '업무' },
-  { date: '2026-05-05', text: '영어 단어 30개', completed: false, category: '공부' },
-  { date: '2026-05-14', text: 'React 최적화 공부', completed: false, category: '공부' },
-  { date: '2026-05-15', text: '헬스장 등록', completed: false, category: '개인' },
-  { date: '2026-05-16', text: '코드 리뷰', completed: false, category: '업무' },
-  { date: '2026-05-19', text: '포트폴리오 배포', completed: false, category: '업무' },
-  { date: '2026-05-20', text: '알고리즘 스터디', completed: false, category: '공부' },
-];
+interface TodoResponse {
+  id: number;
+  title: string;
+  isCompleted: boolean;
+  category: string;
+  scheduledDate: string;
+  deadlineTime?: string | null;
+  moveCount: number;
+}
 
 const CAT_COLORS: Record<string, string> = {
   '공부': '#005AE0',
@@ -39,65 +30,141 @@ const CAT_COLORS: Record<string, string> = {
 const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토'];
 const MONTH_NAMES = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
 
-export function CalendarView() {
+function toDateStr(year: number, month: number, day: number) {
+  return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+}
+
+function getTodayStr() {
+  const d = new Date();
+  return toDateStr(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+export function CalendarView({ isActive }: { isActive?: boolean }) {
   const navigate = useNavigate();
-  const [viewDate, setViewDate] = useState(new Date(2026, 4, 1)); // May 2026
-  const [selectedDate, setSelectedDate] = useState('2026-05-13');
-  const [addedTasks, setAddedTasks] = useState<Record<string, string[]>>({});
+  const today = getTodayStr();
+  const [viewDate, setViewDate] = useState(() => {
+    const d = new Date();
+    return new Date(d.getFullYear(), d.getMonth(), 1);
+  });
+  const [selectedDate, setSelectedDate] = useState(today);
+  const [tasks, setTasks] = useState<CalTask[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [addLoading, setAddLoading] = useState(false);
+  const isAdding = useRef(false);
   const [inputValue, setInputValue] = useState('');
 
   const year = viewDate.getFullYear();
   const month = viewDate.getMonth();
 
-  const firstDayOfWeek = new Date(year, month, 1).getDay(); // 0=Sun
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const fetchTasks = async (y: number, m: number) => {
+    setLoading(true);
+    try {
+      const daysInMonth = new Date(y, m + 1, 0).getDate();
+      const requests = Array.from({ length: daysInMonth }, (_, i) => {
+        const dateStr = toDateStr(y, m, i + 1);
+        return api.get<TodoResponse[]>(`/api/todo?date=${dateStr}`)
+          .then(res => res.data.map(t => ({
+            id: t.id,
+            date: t.scheduledDate,
+            text: t.title,
+            completed: t.isCompleted,
+            category: t.category,
+          })));
+      });
+      const results = await Promise.all(requests);
+      setTasks(results.flat());
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const toDateStr = (d: number) =>
-    `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+  useEffect(() => {
+    if (isActive) fetchTasks(year, month);
+  }, [isActive, year, month]);
 
-  const getTasksForDate = (dateStr: string) => [
-    ...MOCK_TASKS.filter(t => t.date === dateStr),
-    ...(addedTasks[dateStr] ?? []).map(text => ({ date: dateStr, text, completed: false, category: '기타' as const })),
-  ];
+  const getTasksForDate = (dateStr: string) => tasks.filter(t => t.date === dateStr);
 
-  const handleAddTask = () => {
-    if (!inputValue.trim()) return;
-    setAddedTasks(prev => ({ ...prev, [selectedDate]: [...(prev[selectedDate] ?? []), inputValue.trim()] }));
-    setInputValue('');
+  const handleAddTask = async () => {
+    if (!inputValue.trim() || isAdding.current) return;
+    isAdding.current = true;
+    setAddLoading(true);
+    try {
+      const res = await api.post('/api/todo', {
+        title: inputValue.trim(),
+        scheduledDate: selectedDate,
+      });
+      setTasks(prev => [...prev, {
+        id: res.data.id,
+        date: selectedDate,
+        text: res.data.title ?? inputValue.trim(),
+        completed: false,
+        category: res.data.category ?? '',
+      }]);
+      setInputValue('');
+    } catch (e) {
+      console.error(e);
+    } finally {
+      isAdding.current = false;
+      setAddLoading(false);
+    }
+  };
+
+  const deleteTask = async (id: number) => {
+    try {
+      await api.delete(`/api/todo/${id}`);
+      setTasks(prev => prev.filter(t => t.id !== id));
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const getDayStatus = (dateStr: string) => {
-    const tasks = getTasksForDate(dateStr);
-    if (!tasks.length) return 'empty';
-    if (tasks.every(t => t.completed)) return 'done';
-    if (tasks.some(t => t.completed)) return 'partial';
+    const t = getTasksForDate(dateStr);
+    if (!t.length) return 'empty';
+    if (t.every(x => x.completed)) return 'done';
+    if (t.some(x => x.completed)) return 'partial';
     return 'active';
   };
 
   const prevMonth = () => setViewDate(new Date(year, month - 1, 1));
   const nextMonth = () => setViewDate(new Date(year, month + 1, 1));
 
-  const today = '2026-05-13';
   const selectedTasks = getTasksForDate(selectedDate);
 
-  // Build grid cells
+  const firstDayOfWeek = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
   const cells: (number | null)[] = [
     ...Array(firstDayOfWeek).fill(null),
     ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
   ];
-  // Pad to full rows
   while (cells.length % 7 !== 0) cells.push(null);
 
   const formatSelectedDate = (dateStr: string) => {
-    const [, m, d] = dateStr.split('-');
-    const date = new Date(2026, parseInt(m) - 1, parseInt(d));
+    const [y, m, d] = dateStr.split('-');
+    const date = new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
     const dayName = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'][date.getDay()];
     const isPast = dateStr < today;
-    const isFuture = dateStr > today;
     if (dateStr === today) return `${parseInt(m)}월 ${parseInt(d)}일 · 오늘`;
     if (isPast) return `${parseInt(m)}월 ${parseInt(d)}일 · ${dayName} (지난 일정)`;
     return `${parseInt(m)}월 ${parseInt(d)}일 · ${dayName}`;
   };
+
+  const recentDays = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() - 6 + i);
+    const dateStr = toDateStr(d.getFullYear(), d.getMonth(), d.getDate());
+    const label = DAY_LABELS[d.getDay()];
+    const dayTasks = tasks.filter(t => t.date === dateStr);
+    return {
+      label,
+      date: dateStr,
+      done: dayTasks.filter(t => t.completed).length,
+      total: dayTasks.length,
+    };
+  });
 
   return (
     <div style={{ background: '#FFFFFF', minHeight: '100%', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif' }}>
@@ -134,10 +201,10 @@ export function CalendarView() {
       </div>
 
       {/* ── Calendar grid ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', padding: '0 14px', gap: '2px 0' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', padding: '0 14px', gap: '2px 0', opacity: loading ? 0.4 : 1, transition: 'opacity 0.2s' }}>
         {cells.map((day, idx) => {
           if (!day) return <div key={`empty-${idx}`} />;
-          const dateStr = toDateStr(day);
+          const dateStr = toDateStr(year, month, day);
           const status = getDayStatus(dateStr);
           const isToday = dateStr === today;
           const isSelected = dateStr === selectedDate;
@@ -220,19 +287,20 @@ export function CalendarView() {
             value={inputValue}
             onChange={e => setInputValue(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter') handleAddTask(); }}
-            placeholder="할 일 추가..."
+            disabled={addLoading}
+            placeholder={addLoading ? '추가 중...' : '할 일 추가...'}
             style={{ flex: 1, fontSize: 13, color: '#111827', border: 'none', outline: 'none', background: 'transparent', fontFamily: 'inherit' }}
           />
           {inputValue.trim() && (
-            <button onClick={handleAddTask} style={{ fontSize: 12, fontWeight: 600, color: '#005AE0', border: 'none', background: 'none', cursor: 'pointer', padding: 0, fontFamily: 'inherit' }}>
-              추가
+            <button onClick={handleAddTask} disabled={addLoading} style={{ fontSize: 12, fontWeight: 600, color: '#005AE0', border: 'none', background: 'none', cursor: 'pointer', padding: 0, fontFamily: 'inherit' }}>
+              {addLoading ? '...' : '추가'}
             </button>
           )}
         </div>
 
         {/* Task list */}
-        {selectedTasks.map((task, i) => (
-          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 0', borderBottom: '1px solid #F8FAFC' }}>
+        {selectedTasks.map((task) => (
+          <div key={task.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 0', borderBottom: '1px solid #F8FAFC' }}>
             {task.completed
               ? <CheckCircle2 size={16} color="#22C55E" strokeWidth={2} style={{ flexShrink: 0 }} />
               : <Circle size={16} color="#D1D5DB" strokeWidth={1.5} style={{ flexShrink: 0 }} />
@@ -245,30 +313,28 @@ export function CalendarView() {
                 {task.category}
               </span>
             )}
+            <button
+              onClick={e => { e.stopPropagation(); deleteTask(task.id); }}
+              style={{ border: 'none', background: 'none', cursor: 'pointer', padding: '0 0 0 4px', lineHeight: 0, flexShrink: 0 }}
+            >
+              <X size={13} color="#D1D5DB" strokeWidth={2} />
+            </button>
           </div>
         ))}
       </div>
 
-      {/* ── Recent completions (past 7 days summary) ── */}
+      {/* ── Recent 7 days summary ── */}
       <div style={{ padding: '0 20px 20px', borderTop: '1px solid #F1F5F9', marginTop: 4 }}>
         <div style={{ padding: '12px 0 8px', fontSize: 10, color: '#9CA3AF', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 600 }}>
           최근 7일 요약
         </div>
         <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4 }}>
-          {[
-            { label: '목', date: '2026-05-07', done: 1, total: 1 },
-            { label: '금', date: '2026-05-08', done: 1, total: 1 },
-            { label: '토', date: '2026-05-09', done: 1, total: 1 },
-            { label: '일', date: '2026-05-10', done: 2, total: 2 },
-            { label: '월', date: '2026-05-11', done: 0, total: 1 },
-            { label: '화', date: '2026-05-12', done: 2, total: 2 },
-            { label: '수', date: '2026-05-13', done: 0, total: 3 },
-          ].map(day => {
+          {recentDays.map(day => {
             const pct = day.total > 0 ? Math.round((day.done / day.total) * 100) : 0;
             const isSelected = day.date === selectedDate;
             return (
               <div
-                key={day.label}
+                key={day.date}
                 onClick={() => setSelectedDate(day.date)}
                 style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, cursor: 'pointer', flexShrink: 0, minWidth: 38 }}
               >

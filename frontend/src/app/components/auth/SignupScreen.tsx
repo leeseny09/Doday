@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Eye, EyeOff, ChevronLeft } from 'lucide-react';
+import api from '../../../api/axios';
 
 interface Props {
   onSignup: () => void;
@@ -35,13 +36,30 @@ export function SignupScreen({ onSignup, onGoLogin }: Props) {
     return { label: '안전해요', color: '#22C55E', width: '100%' };
   })();
 
-  const handleSignup = () => {
+  const handleSignup = async () => {
     if (!name.trim()) { setError('이름을 입력해주세요.'); return; }
     if (!email.trim()) { setError('이메일을 입력해주세요.'); return; }
     if (password.length < 6) { setError('비밀번호는 6자 이상이어야 해요.'); return; }
     if (!agreed) { setError('이용약관에 동의해주세요.'); return; }
     setError('');
-    onSignup();
+    try {
+      // 백엔드 회원가입 api 호출
+      const response = await api.post('/api/auth/signup', { email, password, name });
+
+      // 회원가입 성공 시 토큰 저장 후 메인으로 이동
+      localStorage.setItem('accessToken', response.data.accessToken);
+      localStorage.setItem('refreshToken', response.data.refreshToken);
+
+      onSignup();
+    } catch (e : any) {
+      if (e.response?.data?.message === '이미 사용중인 이메일입니다.') {
+        setError('이미 사용 중인 이메일이에요.');
+      } else {
+        setError('회원가입에 실패했어요. 다시 시도해주세요.');
+      }
+      
+    }
+    
   };
 
   return (

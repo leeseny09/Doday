@@ -1,26 +1,13 @@
 import { useState } from 'react';
 import { X, Plus, Check } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
-
-const PALETTE = [
-  '#005AE0', '#0EA5E9', '#8B5CF6', '#10B981',
-  '#F97316', '#EF4444', '#EC4899', '#14B8A6',
-  '#F59E0B', '#6366F1', '#84CC16', '#06B6D4',
-];
-
-interface Category { id: string; name: string; color: string }
-
-const DEFAULTS: Category[] = [
-  { id: 'study',    name: '공부', color: '#005AE0' },
-  { id: 'work',     name: '업무', color: '#0EA5E9' },
-  { id: 'personal', name: '개인', color: '#8B5CF6' },
-];
+import { useCategories } from '../context/CategoryContext';
 
 interface Props { open: boolean; onClose: () => void }
 
 export function CategoryModal({ open, onClose }: Props) {
   const { darkMode } = useTheme();
-  const [categories, setCategories] = useState<Category[]>(DEFAULTS);
+  const { categories, addCategory, deleteCategory, palette } = useCategories();
   const [newName, setNewName] = useState('');
   const [newColor, setNewColor] = useState('#10B981');
   const [showAdd, setShowAdd] = useState(false);
@@ -35,16 +22,11 @@ export function CategoryModal({ open, onClose }: Props) {
 
   const isDefault = (id: string) => ['study', 'work', 'personal'].includes(id);
 
-  const addCategory = () => {
+  const handleAdd = async () => {
     if (!newName.trim()) return;
-    setCategories(prev => [...prev, { id: Date.now().toString(), name: newName.trim(), color: newColor }]);
+    await addCategory(newName.trim(), newColor);
     setNewName('');
     setShowAdd(false);
-  };
-
-  const deleteCategory = (id: string) => {
-    if (isDefault(id)) return;
-    setCategories(prev => prev.filter(c => c.id !== id));
   };
 
   return (
@@ -103,7 +85,7 @@ export function CategoryModal({ open, onClose }: Props) {
                 autoFocus
                 value={newName}
                 onChange={e => setNewName(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter') addCategory(); if (e.key === 'Escape') setShowAdd(false); }}
+                onKeyDown={e => { if (e.key === 'Enter') handleAdd(); if (e.key === 'Escape') setShowAdd(false); }}
                 placeholder="카테고리 이름"
                 style={{
                   width: '100%', boxSizing: 'border-box',
@@ -116,7 +98,7 @@ export function CategoryModal({ open, onClose }: Props) {
               {/* Color palette */}
               <div style={{ fontSize: 11, color: sub, marginBottom: 8, fontWeight: 500 }}>색상 선택</div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 14 }}>
-                {PALETTE.map(c => (
+                {palette.map(c => (
                   <button
                     key={c}
                     onClick={() => setNewColor(c)}
@@ -140,7 +122,7 @@ export function CategoryModal({ open, onClose }: Props) {
                   취소
                 </button>
                 <button
-                  onClick={addCategory}
+                  onClick={handleAdd}
                   disabled={!newName.trim()}
                   style={{
                     flex: 2, padding: '10px',

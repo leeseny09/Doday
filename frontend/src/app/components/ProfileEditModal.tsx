@@ -1,13 +1,25 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, Camera } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
+import api from '../../api/axios';
 
-interface Props { open: boolean; onClose: () => void }
+interface Props { open: boolean; onClose: () => void; onSave?: () => void }
 
-export function ProfileEditModal({ open, onClose }: Props) {
+export function ProfileEditModal({ open, onClose, onSave }: Props) {
   const { darkMode } = useTheme();
-  const [name, setName] = useState('김데이');
-  const [email, setEmail] = useState('doday@example.com');
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    api.get('/api/auth/me')
+      .then(res => {
+        setName(res.data.name ?? res.data.nickname ?? '');
+        setEmail(res.data.email ?? '');
+      })
+      .catch(console.error);
+  }, [open]);
 
   if (!open) return null;
 
@@ -27,8 +39,18 @@ export function ProfileEditModal({ open, onClose }: Props) {
     transition: 'border-color 0.2s ease',
   };
 
-  const handleSave = () => {
-    onClose();
+  const handleSave = async () => {
+    if (!name.trim()) return;
+    setSaving(true);
+    try {
+      await api.patch('/api/auth/me', { name: name.trim() });
+      onSave?.();
+      onClose();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -69,7 +91,7 @@ export function ProfileEditModal({ open, onClose }: Props) {
               background: 'linear-gradient(135deg, #005AE0 0%, #0EA5E9 100%)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
-              <span style={{ fontSize: 28, fontWeight: 800, color: '#FFFFFF' }}>김</span>
+              <span style={{ fontSize: 28, fontWeight: 800, color: '#FFFFFF' }}>{name?.[0] ?? '?'}</span>
             </div>
             <button style={{
               position: 'absolute', bottom: 0, right: 0,
@@ -105,17 +127,16 @@ export function ProfileEditModal({ open, onClose }: Props) {
             </div>
             <input
               value={email}
-              onChange={e => setEmail(e.target.value)}
-              style={inputStyle}
+              readOnly
+              style={{ ...inputStyle, color: sub, cursor: 'default' }}
               placeholder="이메일"
               type="email"
-              onFocus={e => (e.target.style.borderColor = blue)}
-              onBlur={e => (e.target.style.borderColor = bdr)}
             />
           </div>
 
           <button
             onClick={handleSave}
+            disabled={saving}
             style={{
               marginTop: 8,
               width: '100%', padding: '13px',
@@ -126,7 +147,7 @@ export function ProfileEditModal({ open, onClose }: Props) {
               letterSpacing: '-0.2px',
             }}
           >
-            저장하기
+            {saving ? '저장 중...' : '저장하기'}
           </button>
         </div>
       </div>

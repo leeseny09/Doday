@@ -1,16 +1,18 @@
 import { useState, useEffect } from 'react';
 import { Clock, Sparkles, CheckCircle2, ArrowRight } from 'lucide-react';
+import api from '../../api/axios';
 
 interface DeadlineModalProps {
   open: boolean;
   onClose: () => void;
+  onComplete?: () => void;
   todo: { text: string; deadline: string };
 }
 
 type Phase = 'prompt' | 'loading' | 'result';
 
-// Simulated AI rescheduling result
-const AI_RESULT = {
+// Fallback AI rescheduling result (API 미구현 시 사용)
+const AI_RESULT_FALLBACK = {
   movedTo: '내일 오후 8:00',
   reason: '오후 시간대 두 시간이 비어 있어요. 집중력이 높은 저녁 시간대에 배치했어요.',
   tomorrowSchedule: [
@@ -24,9 +26,11 @@ const CAT_COLOR: Record<string, string> = {
   '공부': '#005AE0', '업무': '#0EA5E9', '개인': '#8B5CF6',
 };
 
-export function DeadlineModal({ open, onClose, todo }: DeadlineModalProps) {
+export function DeadlineModal({ open, onClose, onComplete, todo }: DeadlineModalProps) {
   const [phase, setPhase] = useState<Phase>('prompt');
   const [dotCount, setDotCount] = useState(1);
+  const [demoTodo, setDemoTodo] = useState<{ id: number; text: string; deadline: string } | null>(null);
+  const [aiResult, setAiResult] = useState(AI_RESULT_FALLBACK);
 
   // Animated loading dots
   useEffect(() => {
@@ -35,14 +39,56 @@ export function DeadlineModal({ open, onClose, todo }: DeadlineModalProps) {
     return () => clearInterval(id);
   }, [phase]);
 
-  // Reset when opened
+  // Reset + fetch real todo when opened
   useEffect(() => {
-    if (open) setPhase('prompt');
+    if (!open) return;
+    setPhase('prompt');
+    setAiResult(AI_RESULT_FALLBACK);
+    const today = new Date().toISOString().split('T')[0];
+    api.get(`/api/todo?date=${today}`)
+      .then(res => {
+        const list = Array.isArray(res.data) ? res.data : [];
+        const incomplete = list.filter((t: any) => !t.isCompleted);
+        const target = incomplete.find((t: any) => t.deadlineTime) ?? incomplete[0];
+        if (target) {
+          setDemoTodo({
+            id: target.id,
+            text: target.title,
+            deadline: target.deadlineTime
+              ? target.deadlineTime.substring(11, 16)
+              : '오늘 마감',
+          });
+        }
+      })
+      .catch(console.error);
   }, [open]);
 
-  const handleDefer = () => {
+  const handleComplete = async () => {
+    if (demoTodo?.id) {
+      try {
+        await api.patch(`/api/todo/${demoTodo.id}/complete`);
+        onComplete?.();
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    onClose();
+  };
+
+  const handleDefer = async () => {
     setPhase('loading');
-    setTimeout(() => setPhase('result'), 1800);
+    try {
+      const res = await api.post(`/api/todo/${demoTodo?.id ?? 0}/defer`);
+      setAiResult({
+        movedTo: res.data.movedTo ?? '내일',
+        reason: res.data.reason ?? 'AI가 최적 시간대에 배치했어요.',
+        tomorrowSchedule: Array.isArray(res.data.tomorrowSchedule) ? res.data.tomorrowSchedule : [],
+      });
+    } catch {
+      setAiResult(AI_RESULT_FALLBACK);
+    } finally {
+      setPhase('result');
+    }
   };
 
   if (!open) return null;
@@ -81,10 +127,10 @@ export function DeadlineModal({ open, onClose, todo }: DeadlineModalProps) {
               <div style={{ fontSize: 12, color: '#6B7280' }}>이 할 일, 오늘 끝냈나요?</div>
             </div>
             <div style={{ borderTop: '1px solid #F1F5F9', borderBottom: '1px solid #F1F5F9', padding: '14px 0', marginBottom: 22 }}>
-              <div style={{ fontSize: 14, fontWeight: 600, color: '#111827', marginBottom: 4, letterSpacing: '-0.2px' }}>{todo.text}</div>
-              <div style={{ fontSize: 12, color: '#9CA3AF' }}>마감 {todo.deadline}</div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: '#111827', marginBottom: 4, letterSpacing: '-0.2px' }}>{demoTodo?.text ?? todo.text}</div>
+              <div style={{ fontSize: 12, color: '#9CA3AF' }}>마감 {demoTodo?.deadline ?? todo.deadline}</div>
             </div>
-            <button onClick={onClose} style={{ width: '100%', padding: '14px', background: '#005AE0', color: '#FFFFFF', border: 'none', borderRadius: 12, fontSize: 14, fontWeight: 600, cursor: 'pointer', marginBottom: 10, fontFamily: 'inherit', letterSpacing: '-0.1px' }}>
+            <button onClick={handleComplete} style={{ width: '100%', padding: '14px', background: '#005AE0', color: '#FFFFFF', border: 'none', borderRadius: 12, fontSize: 14, fontWeight: 600, cursor: 'pointer', marginBottom: 10, fontFamily: 'inherit', letterSpacing: '-0.1px' }}>
               완료했어요
             </button>
             <button onClick={handleDefer} style={{ width: '100%', padding: '14px', background: 'transparent', color: '#6B7280', border: '1px solid #E5E7EB', borderRadius: 12, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}>
@@ -157,12 +203,12 @@ export function DeadlineModal({ open, onClose, todo }: DeadlineModalProps) {
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 12, color: '#9CA3AF', marginBottom: 3 }}>이월된 할 일</div>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: '#111827' }}>{todo.text}</div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: '#111827' }}>{demoTodo?.text ?? todo.text}</div>
                 </div>
                 <ArrowRight size={16} color="#BFDBFE" strokeWidth={2} />
                 <div style={{ textAlign: 'right' }}>
                   <div style={{ fontSize: 12, color: '#9CA3AF', marginBottom: 3 }}>배치된 시간</div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: '#005AE0' }}>{AI_RESULT.movedTo}</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#005AE0' }}>{aiResult.movedTo}</div>
                 </div>
               </div>
             </div>
@@ -171,17 +217,18 @@ export function DeadlineModal({ open, onClose, todo }: DeadlineModalProps) {
             <div style={{ display: 'flex', gap: 8, marginBottom: 16, padding: '0 2px' }}>
               <div style={{ width: 2, background: '#0EA5E9', borderRadius: 1, flexShrink: 0 }} />
               <p style={{ fontSize: 12, color: '#374151', margin: 0, lineHeight: 1.6 }}>
-                {AI_RESULT.reason}
+                {aiResult.reason}
               </p>
             </div>
 
             {/* Tomorrow's schedule */}
+            {aiResult.tomorrowSchedule.length > 0 && (
             <div style={{ marginBottom: 20 }}>
               <div style={{ fontSize: 10, color: '#9CA3AF', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 600, marginBottom: 10 }}>
                 내일 업데이트된 일정
               </div>
-              {AI_RESULT.tomorrowSchedule.map((item, i) => {
-                const text = item.isNew ? todo.text : item.text;
+              {aiResult.tomorrowSchedule.map((item, i) => {
+                const text = item.isNew ? (demoTodo?.text ?? todo.text) : item.text;
                 const cc = CAT_COLOR[item.category] ?? '#9CA3AF';
                 return (
                   <div key={i} style={{
@@ -207,6 +254,7 @@ export function DeadlineModal({ open, onClose, todo }: DeadlineModalProps) {
                 );
               })}
             </div>
+            )}
 
             <button
               onClick={onClose}

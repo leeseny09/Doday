@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
+import api from '../../../api/axios';
 
 interface Props {
   onLogin: (autoLogin: boolean) => void;
@@ -27,14 +28,27 @@ export function LoginScreen({ onLogin, onGoSignup }: Props) {
     transition: 'border-color 0.2s ease',
   };
 
-  const handleLogin = () => {
+  const handleLogin = async() => {
     if (!email.trim() || !password.trim()) {
       setError('이메일과 비밀번호를 입력해주세요.');
       return;
     }
     setError('');
-    onLogin(autoLogin);
+
+    try {
+      // 백엔드 로그인 api 호출
+      const response = await api.post('/api/auth/login',{email, password});
+
+      // 토큰 로컬 스토리지에 저장
+      localStorage.setItem('accessToken',response.data.accessToken);
+      localStorage.setItem('refreshToken',response.data.refreshToken);
+
+      onLogin(autoLogin);
+    } catch (e){
+      setError('이메일 또는 비밀번호가 올바르지 않아요.');
+    }
   };
+
 
   return (
     <div style={{
@@ -164,7 +178,7 @@ export function LoginScreen({ onLogin, onGoSignup }: Props) {
         </div>
 
         <button
-          onClick={() => onLogin(autoLogin)}
+            onClick={() => window.location.href = 'http://localhost:8080/oauth2/authorization/google'}
           style={{
             width: '100%', padding: '13px',
             background: '#FFFFFF', color: '#111827',
